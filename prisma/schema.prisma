@@ -1,0 +1,78 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model Customer {
+    customerID Int       @id @default(autoincrement())
+    email      String
+    name       String
+    address    String
+    DOB        DateTime
+    password   String
+    Review     Review[]
+    Booking    Booking[]
+}
+
+model Booking {
+    bookingID    Int      @id @default(autoincrement())
+    checkinDate  DateTime
+    checkoutDate DateTime
+    billNo       Int
+    userNo       Int
+    roomNo       Int
+    room         Room     @relation(fields: [roomNo], references: [roomNo])
+    bill         Bill     @relation(fields: [billNo], references: [billID])
+    user         Customer @relation(fields: [userNo], references: [customerID])
+}
+
+model Bill {
+    billID      Int       @id @default(autoincrement())
+    amount      Int
+    paymentDate DateTime
+    Booking     Booking[]
+}
+
+model Hotel {
+    hotelID  Int    @id @default(autoincrement())
+    email    String
+    name     String
+    address  String
+    password String
+    Room     Room[]
+}
+
+model Room {
+    roomNo      Int       @id @default(autoincrement())
+    description String
+    price       Int
+    type        String
+    booked      Boolean
+    hotelNo     Int
+    hotel       Hotel     @relation(fields: [hotelNo], references: [hotelID])
+    Review      Review[]
+    Booking     Booking[]
+    Images      Images[]
+}
+
+model Review {
+    reviewID    Int      @id @default(autoincrement())
+    review      Int
+    title       String
+    description String
+    userNo      Int
+    roomNo      Int
+    user        Customer @relation(fields: [userNo], references: [customerID])
+    room        Room     @relation(fields: [roomNo], references: [roomNo])
+}
+
+model Images {
+    imageId Int    @id @default(autoincrement())
+    link    String
+    roomNo  Int
+    room    Room   @relation(fields: [roomNo], references: [roomNo])
+}
