@@ -5,6 +5,11 @@ const cors = require("cors");
 
 app.use(express.json());
 
+corsOptions = {
+    origin: "*",
+    optionsSuccessStatus: 200,
+};
+
 app.use(cors());
 
 app.use("/api/user", userRoutes);
