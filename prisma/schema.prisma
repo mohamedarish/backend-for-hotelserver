@@ -22,12 +22,12 @@ model Booking {
     bookingID    Int      @id @default(autoincrement())
     checkinDate  DateTime
     checkoutDate DateTime
-    billNo       Int
-    userNo       Int
-    roomNo       Int
-    room         Room     @relation(fields: [roomNo], references: [roomNo])
-    bill         Bill     @relation(fields: [billNo], references: [billID])
-    user         Customer @relation(fields: [userNo], references: [customerID])
+    billID       Int
+    customerID   Int
+    roomID       Int
+    room         Room     @relation(fields: [roomID], references: [roomID])
+    bill         Bill     @relation(fields: [billID], references: [billID])
+    user         Customer @relation(fields: [customerID], references: [customerID])
 }
 
 model Bill {
@@ -38,22 +38,23 @@ model Bill {
 }
 
 model Hotel {
-    hotelID  Int    @id @default(autoincrement())
+    hotelID  Int      @id @default(autoincrement())
     email    String
     name     String
     address  String
     password String
     Room     Room[]
+    Images   Images[]
 }
 
 model Room {
-    roomNo      Int       @id @default(autoincrement())
+    roomID      Int       @id @default(autoincrement())
     description String
     price       Int
     type        String
     booked      Boolean
-    hotelNo     Int
-    hotel       Hotel     @relation(fields: [hotelNo], references: [hotelID])
+    hotelID     Int
+    hotel       Hotel     @relation(fields: [hotelID], references: [hotelID])
     Review      Review[]
     Booking     Booking[]
     Images      Images[]
@@ -63,16 +64,18 @@ model Review {
     reviewID    Int      @id @default(autoincrement())
     review      Int
     title       String
-    description String
-    userNo      Int
-    roomNo      Int
-    user        Customer @relation(fields: [userNo], references: [customerID])
-    room        Room     @relation(fields: [roomNo], references: [roomNo])
+    description String?
+    customerID  Int
+    roomID      Int
+    user        Customer @relation(fields: [customerID], references: [customerID])
+    room        Room     @relation(fields: [roomID], references: [roomID])
 }
 
 model Images {
     imageId Int    @id @default(autoincrement())
     link    String
-    roomNo  Int
-    room    Room   @relation(fields: [roomNo], references: [roomNo])
+    roomID  Int
+    hotelID Int
+    hotel   Hotel  @relation(fields: [hotelID], references: [hotelID])
+    room    Room   @relation(fields: [roomID], references: [roomID])
 }

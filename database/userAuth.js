@@ -18,7 +18,7 @@ const signUpNewUser = async (req, res) => {
             throw Error("User Already Exists");
         }
 
-        await client.customer.create({
+        const user = await client.customer.create({
             data: {
                 email,
                 name,
@@ -28,11 +28,14 @@ const signUpNewUser = async (req, res) => {
             },
         });
 
+        if (!user) {
+            throw Error("Failed to create record");
+        }
+
         res.status(200).json({
             email,
             name,
-            address,
-            DOB,
+            userID: user.customerID,
         });
     } catch (error) {
         res.status(400).json({
@@ -63,6 +66,7 @@ const checkUserLoginCreds = async (req, res) => {
         res.status(200).json({
             email,
             name: user.name,
+            userID: user.customerID,
         });
     } catch (error) {
         res.status(400).json({

@@ -18,7 +18,7 @@ const signUpNewHotel = async (req, res) => {
             throw Error("User already exists");
         }
 
-        await client.hotel.create({
+        const createdHotel = await client.hotel.create({
             data: {
                 email,
                 name,
@@ -27,10 +27,14 @@ const signUpNewHotel = async (req, res) => {
             },
         });
 
+        if (!createdHotel) {
+            throw Error("Failed to create record");
+        }
+
         res.status(200).json({
             email,
             name,
-            address,
+            userID: createdHotel.hotelID,
         });
     } catch (error) {
         res.status(400).json({
@@ -61,6 +65,7 @@ const checkHotelLoginCreds = async (req, res) => {
         res.status(200).json({
             email,
             name: user.name,
+            userID: user.hotelID,
         });
     } catch (error) {
         res.status(400).json({
