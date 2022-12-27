@@ -45,17 +45,20 @@ const createReview = async (req, res) => {
     } catch (error) {
         try {
             await client.review.create({
-                review,
-                title,
-                description,
-                customerID,
-                roomID,
+                data: {
+                    review,
+                    title,
+                    description,
+                    customerID,
+                    roomID,
+                },
             });
 
             res.status(200).json({
                 report: true,
             });
         } catch (error) {
+            console.error(error);
             res.status(400).json({
                 error: error.message,
                 report: false,
