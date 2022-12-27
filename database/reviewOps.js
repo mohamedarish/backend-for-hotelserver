@@ -21,8 +21,6 @@ const createReview = async (req, res) => {
             })
         ).reviewID;
 
-        console.log(reviewID);
-
         await client.review.upsert({
             where: {
                 reviewID,
@@ -45,7 +43,6 @@ const createReview = async (req, res) => {
             report: true,
         });
     } catch (error) {
-        console.error(error);
         try {
             await client.review.create({
                 review,
@@ -59,7 +56,6 @@ const createReview = async (req, res) => {
                 report: true,
             });
         } catch (error) {
-            console.error(error);
             res.status(400).json({
                 error: error.message,
                 report: false,
