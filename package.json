@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "migrate": "npx prisma migrate deploy --name hotelman",
+    "migrate": "npx prisma migrate deploy",
     "start": "node server.js"
   },
   "author": "",
