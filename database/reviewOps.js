@@ -12,22 +12,59 @@ const createReview = async (req, res) => {
     }
 
     try {
-        await client.review.create({
-            review,
-            title,
-            description,
-            customerID,
-            roomID,
+        const reviewID = (
+            await client.review.findFirst({
+                where: {
+                    customerID,
+                    roomID,
+                },
+            })
+        ).reviewID;
+
+        console.log(reviewID);
+
+        await client.review.upsert({
+            where: {
+                reviewID,
+            },
+            update: {
+                review,
+                title,
+                description,
+            },
+            create: {
+                review,
+                title,
+                description,
+                customerID,
+                roomID,
+            },
         });
 
         res.status(200).json({
             report: true,
         });
     } catch (error) {
-        res.status(400).json({
-            error: error.message,
-            report: false,
-        });
+        console.error(error);
+        try {
+            await client.review.create({
+                review,
+                title,
+                description,
+                customerID,
+                roomID,
+            });
+
+            res.status(200).json({
+                report: true,
+            });
+        } catch (error) {
+            console.error(error);
+            res.status(400).json({
+                error: error.message,
+                report: false,
+            });
+        }
     }
 };
 

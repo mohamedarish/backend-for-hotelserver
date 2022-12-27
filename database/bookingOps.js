@@ -170,6 +170,9 @@ const viewCurrentBookings = async (req, res) => {
                 number_of_reviews: reviewNumber._count.review,
                 rating: Math.floor(avgReview._avg.review),
                 hotelID: bookings[i].hotelID,
+                checkinDate: bookings[i].checkinDate,
+                checkoutDate: bookings[i].checkoutDate,
+                roomID: bookings[i].roomID,
             });
         }
 
@@ -246,6 +249,9 @@ const viewOldBookings = async (req, res) => {
                 number_of_reviews: reviewNumber._count.review,
                 rating: Math.floor(avgReview._avg.review),
                 hotelID: bookings[i].hotelID,
+                checkinDate: bookings[i].checkinDate,
+                checkoutDate: bookings[i].checkoutDate,
+                roomID: bookings[i].roomID,
             });
         }
 
