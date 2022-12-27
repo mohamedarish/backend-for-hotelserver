@@ -85,6 +85,78 @@ const removeRoom = async (req, res) => {
     }
 };
 
+const allRooms = async (req, res) => {
+    const client = getClient();
+
+    try {
+        const allRooms = await client.room.findMany({
+            where: {
+                booked: false,
+            },
+            include: {
+                hotel: true,
+            },
+        });
+
+        if (allRooms.length < 1) {
+            throw Error("No rooms found");
+        }
+
+        const rooms = [];
+
+        for (let i = 0; i < allRooms.length; i += 1) {
+            const image = await client.images.findFirst({
+                where: {
+                    roomID: allRooms[i].roomID,
+                },
+            });
+
+            const reviewNumber = await client.review.aggregate({
+                _count: {
+                    review: true,
+                },
+                where: {
+                    roomID: allRooms[i].roomID,
+                },
+            });
+
+            const avgReview = await client.review.aggregate({
+                _avg: {
+                    review: true,
+                },
+                where: {
+                    roomID: allRooms[i].roomID,
+                },
+            });
+
+            rooms.push({
+                roomID: allRooms[i].roomID,
+                description: allRooms[i].description,
+                price: allRooms[i].price,
+                booked: allRooms[i].booked,
+                type: allRooms[i].type,
+                hotelID: allRooms[i].hotelID,
+                image: image
+                    ? image.link
+                    : "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg?20200913095930",
+                name: allRooms[i].hotel.name,
+                address: allRooms[i].hotel.address,
+                number_of_reviews: reviewNumber._count.review,
+                rating: Math.floor(avgReview._avg.review),
+                hotelID: allRooms[0].hotelID,
+            });
+        }
+
+        res.status(200).json({
+            rooms,
+        });
+    } catch (error) {
+        res.status(400).json({
+            error: error.message,
+        });
+    }
+};
+
 const allMyRooms = async (req, res) => {
     const client = getClient();
 
@@ -145,6 +217,7 @@ const allMyRooms = async (req, res) => {
                 address: allRooms[i].hotel.address,
                 number_of_reviews: reviewNumber._count.review,
                 rating: Math.floor(avgReview._avg.review),
+                hotelID: allRooms[0].hotelID,
             });
         }
 
@@ -168,7 +241,7 @@ const getOneRoom = async (req, res) => {
     try {
         const room = await client.images.findMany({
             where: {
-                roomID,
+                roomID: parseInt(roomID),
             },
             include: {
                 room: true,
@@ -213,6 +286,7 @@ const getOneRoom = async (req, res) => {
             images,
             number_of_reviews: reviewNumber._count.review,
             rating: Math.floor(avgReview._avg.review),
+            hotelID: room[0].hotelID,
         };
 
         res.status(200).json({
@@ -229,5 +303,6 @@ module.exports = {
     createNewRoom,
     removeRoom,
     allMyRooms,
+    allRooms,
     getOneRoom,
 };

@@ -10,6 +10,7 @@ const createBooking = async (req, res) => {
         checkinDate,
         checkoutDate,
         amount,
+        hotelID,
     } = req.body;
 
     if (
@@ -18,7 +19,8 @@ const createBooking = async (req, res) => {
         !paymentDate ||
         !checkinDate ||
         !checkoutDate ||
-        !amount
+        !amount ||
+        !hotelID
     )
         return;
 
@@ -41,6 +43,7 @@ const createBooking = async (req, res) => {
                 billID: bill.billID,
                 customerID,
                 roomID,
+                hotelID,
             },
         });
 
@@ -48,12 +51,48 @@ const createBooking = async (req, res) => {
             throw Error("Failed to create booking");
         }
 
+        if (checkoutDate > paymentDate) {
+            await client.room.update({
+                where: {
+                    roomID,
+                },
+                data: {
+                    booked: true,
+                },
+            });
+        }
+
+        res.status(200).json({
+            report: true,
+        });
+    } catch (error) {
+        res.status(400).json({
+            error: error.message,
+            report: false,
+        });
+    }
+};
+
+const cancelBooking = async (req, res) => {
+    const client = getClient();
+
+    const { bookingID } = req.body;
+
+    if (!bookingID) return;
+
+    try {
+        const prev = await client.booking.delete({
+            where: {
+                bookingID,
+            },
+        });
+
         await client.room.update({
             where: {
-                roomID,
+                roomID: prev.roomID,
             },
             data: {
-                booked: true,
+                booked: false,
             },
         });
 
@@ -71,21 +110,20 @@ const createBooking = async (req, res) => {
 const viewCurrentBookings = async (req, res) => {
     const client = getClient();
 
-    const { userID, currentDate } = req.body;
+    const { customerID, currentDate } = req.body;
 
     try {
         const bookings = await client.booking.findMany({
             where: {
-                userID,
-                some: {
-                    checkoutDate: {
-                        gt: currentDate,
-                    },
+                customerID,
+                checkoutDate: {
+                    gt: currentDate,
                 },
             },
             include: {
                 bill: true,
                 room: true,
+                hotel: true,
             },
         });
 
@@ -93,8 +131,50 @@ const viewCurrentBookings = async (req, res) => {
             throw Error("No bookings found");
         }
 
+        const rooms = [];
+
+        for (let i = 0; i < bookings.length; i += 1) {
+            const image = await client.images.findFirst({
+                where: {
+                    roomID: bookings[i].room.roomID,
+                },
+            });
+
+            const reviewNumber = await client.review.aggregate({
+                _count: {
+                    review: true,
+                },
+                where: {
+                    roomID: bookings[i].roomID,
+                },
+            });
+
+            const avgReview = await client.review.aggregate({
+                _avg: {
+                    review: true,
+                },
+                where: {
+                    roomID: bookings[i].roomID,
+                },
+            });
+
+            rooms.push({
+                bookingID: bookings[i].bookingID,
+                name: bookings[i].hotel.name,
+                address: bookings[i].hotel.address,
+                price: bookings[i].bill.amount,
+                image: image
+                    ? image.link
+                    : "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg?20200913095930",
+                type: bookings[i].room.type,
+                number_of_reviews: reviewNumber._count.review,
+                rating: Math.floor(avgReview._avg.review),
+                hotelID: bookings[i].hotelID,
+            });
+        }
+
         res.status(200).json({
-            rooms: bookings,
+            rooms,
         });
     } catch (error) {
         res.status(400).json({
@@ -106,21 +186,20 @@ const viewCurrentBookings = async (req, res) => {
 const viewOldBookings = async (req, res) => {
     const client = getClient();
 
-    const { userID, currentDate } = req.body;
+    const { customerID, currentDate } = req.body;
 
     try {
         const bookings = await client.booking.findMany({
             where: {
-                userID,
-                some: {
-                    checkoutDate: {
-                        lt: currentDate,
-                    },
+                customerID,
+                checkoutDate: {
+                    lt: currentDate,
                 },
             },
             include: {
                 bill: true,
                 room: true,
+                hotel: true,
             },
         });
 
@@ -128,10 +207,53 @@ const viewOldBookings = async (req, res) => {
             throw Error("No bookings found");
         }
 
+        const rooms = [];
+
+        for (let i = 0; i < bookings.length; i += 1) {
+            const image = await client.images.findFirst({
+                where: {
+                    roomID: bookings[i].room.roomID,
+                },
+            });
+
+            const reviewNumber = await client.review.aggregate({
+                _count: {
+                    review: true,
+                },
+                where: {
+                    roomID: bookings[i].roomID,
+                },
+            });
+
+            const avgReview = await client.review.aggregate({
+                _avg: {
+                    review: true,
+                },
+                where: {
+                    roomID: bookings[i].roomID,
+                },
+            });
+
+            rooms.push({
+                bookingID: bookings[i].bookingID,
+                name: bookings[i].hotel.name,
+                address: bookings[i].hotel.address,
+                price: bookings[i].bill.amount,
+                image: image
+                    ? image.link
+                    : "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg?20200913095930",
+                type: bookings[i].room.type,
+                number_of_reviews: reviewNumber._count.review,
+                rating: Math.floor(avgReview._avg.review),
+                hotelID: bookings[i].hotelID,
+            });
+        }
+
         res.status(200).json({
-            rooms: bookings,
+            rooms,
         });
     } catch (error) {
+        console.error(error);
         res.status(400).json({
             error: error.message,
         });
@@ -140,12 +262,7 @@ const viewOldBookings = async (req, res) => {
 
 module.exports = {
     createBooking,
-    viewCurrentBookings,
-    viewOldBookings,
-};
-
-module.exports = {
-    createBooking,
+    cancelBooking,
     viewCurrentBookings,
     viewOldBookings,
 };

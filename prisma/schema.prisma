@@ -25,9 +25,11 @@ model Booking {
     billID       Int
     customerID   Int
     roomID       Int
+    hotelID      Int
+    hotel        Hotel    @relation(fields: [hotelID], references: [hotelID])
     room         Room     @relation(fields: [roomID], references: [roomID])
     bill         Bill     @relation(fields: [billID], references: [billID])
-    user         Customer @relation(fields: [customerID], references: [customerID])
+    customer     Customer @relation(fields: [customerID], references: [customerID])
 }
 
 model Bill {
@@ -38,13 +40,14 @@ model Bill {
 }
 
 model Hotel {
-    hotelID  Int      @id @default(autoincrement())
+    hotelID  Int       @id @default(autoincrement())
     email    String
     name     String
     address  String
     password String
     Room     Room[]
     Images   Images[]
+    Booking  Booking[]
 }
 
 model Room {
@@ -67,7 +70,7 @@ model Review {
     description String?
     customerID  Int
     roomID      Int
-    user        Customer @relation(fields: [customerID], references: [customerID])
+    customer    Customer @relation(fields: [customerID], references: [customerID])
     room        Room     @relation(fields: [roomID], references: [roomID])
 }
 

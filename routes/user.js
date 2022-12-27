@@ -9,11 +9,13 @@ const {
     removeRoom,
     allMyRooms,
     getOneRoom,
+    allRooms,
 } = require("../database/roomOps");
 const {
     createBooking,
     viewCurrentBookings,
     viewOldBookings,
+    cancelBooking,
 } = require("../database/bookingOps");
 const { createReview, viewReviews } = require("../database/reviewOps");
 
@@ -33,9 +35,13 @@ router.post("/removeroom", removeRoom);
 
 router.post("/myrooms", allMyRooms);
 
+router.post("/allrooms", allRooms);
+
 router.post("/oneroom", getOneRoom);
 
 router.post("/bookroom", createBooking);
+
+router.post("/cancelbooking", cancelBooking);
 
 router.post("/currentbookings", viewCurrentBookings);
 

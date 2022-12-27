@@ -41,6 +41,9 @@ const viewReviews = async (req, res) => {
             where: {
                 roomID,
             },
+            include: {
+                customer: true,
+            },
         });
 
         res.status(200).json({
